@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% block title %}Register — FarmDirect{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <div class="card border-0 shadow-sm rounded-4 p-4">
+      <h3 class="fw-bold mb-4 text-center"><i class="fas fa-user-plus text-success me-2"></i>Create Account</h3>
+      <form method="POST">
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Full Name</label>
+          <input type="text" name="name" class="form-control rounded-3" required placeholder="Your full name">
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Email</label>
+          <input type="email" name="email" class="form-control rounded-3" required placeholder="you@email.com">
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Password</label>
+          <input type="password" name="password" class="form-control rounded-3" required minlength="6" placeholder="Min 6 characters">
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">I am a...</label>
+          <div class="d-flex gap-3">
+            <div class="role-card flex-fill text-center p-3 rounded-3 border" onclick="selectRole('farmer')" id="role_farmer">
+              <i class="fas fa-tractor fa-2x text-success mb-2 d-block"></i>
+              <strong>Farmer</strong><br><small class="text-muted">I want to sell products</small>
+              <input type="radio" name="role" value="farmer" class="d-none" id="radio_farmer">
+            </div>
+            <div class="role-card flex-fill text-center p-3 rounded-3 border" onclick="selectRole('customer')" id="role_customer">
+              <i class="fas fa-user fa-2x text-info mb-2 d-block"></i>
+              <strong>Customer</strong><br><small class="text-muted">I want to buy products</small>
+              <input type="radio" name="role" value="customer" class="d-none" id="radio_customer">
+            </div>
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Phone <span class="text-muted" required>*</span></label>
+          <input type="text" name="phone" class="form-control rounded-3" placeholder="Mobile number"required >
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Location <span class="text-muted">*</span></label>
+          <input type="text" name="location" class="form-control rounded-3"required placeholder="City / Village">
+        </div>
+        <button type="submit" class="btn btn-success w-100 rounded-3 fw-semibold">Register</button>
+      </form>
+      <p class="text-center mt-3 text-muted">Already have an account? <a href="{{ url_for('login') }}" class="text-success fw-semibold">Login</a></p>
+    </div>
+  </div>
+</div>
+<script>
+function selectRole(role) {
+  document.getElementById('role_farmer').classList.remove('border-success', 'bg-success-subtle');
+  document.getElementById('role_customer').classList.remove('border-info', 'bg-info-subtle');
+  if (role === 'farmer') {
+    document.getElementById('role_farmer').classList.add('border-success', 'bg-success-subtle');
+    document.getElementById('radio_farmer').checked = true;
+  } else {
+    document.getElementById('role_customer').classList.add('border-info', 'bg-info-subtle');
+    document.getElementById('radio_customer').checked = true;
+  }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+{% block title %}Farmer Dashboard — FarmDirect{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2 class="fw-bold"><i class="fas fa-tractor text-success me-2"></i>My Dashboard</h2>
+  <a href="{{ url_for('add_product') }}" class="btn btn-success rounded-pill px-4">
+    <i class="fas fa-plus me-2"></i>Add Product
+  </a>
+</div>
+
+<!-- STATS -->
+<div class="row g-3 mb-4">
+
+   <div class="col-md-3">
+    <a href="#products-section" class="text-decoration-none">
+        <div class="card border-0 bg-success text-white rounded-4 p-3 text-center">
+            <i class="fas fa-box fa-2x mb-2"></i>
+            <h3 class="fw-bold">{{ products|length }}</h3>
+            <div>Total Products</div>
+        </div>
+    </a>
+</div>
+
+    <div class="col-md-3">
+        <a href="#" class="text-decoration-none">
+            <div class="card border-0 bg-warning text-dark rounded-4 p-3 text-center">
+                <i class="fas fa-check-circle fa-2x mb-2"></i>
+                <h3 class="fw-bold">{{ products|selectattr('is_active')|list|length }}</h3>
+                <div>Active Listings</div>
+            </div>
+        </a>
+    </div>
+
+    <div class="col-md-3">
+        <a href="{{ url_for('farmer_orders') }}" class="text-decoration-none">
+            <div class="card border-0 bg-info text-white rounded-4 p-3 text-center">
+                <i class="fas fa-receipt fa-2x mb-2"></i>
+                <h3 class="fw-bold">{{ order_items|length }}</h3>
+                <div>Orders Received</div>
+            </div>
+        </a>
+    </div>
+
+    <div class="col-md-3">
+    <a href="#">
+    <div class="card border-0 bg-dark text-white rounded-4 p-3 text-center">
+                <i class="fas fa-rupee-sign fa-2x mb-2"></i>
+                <h3 class="fw-bold">₹{{ "%.0f"|format(total_revenue) }}</h3>
+                <div>Total Revenue</div>
+            </div>
+        </a>
+    </div>
+
+</div>
+
+<!-- PRODUCTS TABLE -->
+<div id="products-section"></div>
+<div class="card border-0 shadow-sm rounded-4">
+  <div class="card-header bg-transparent border-0 pt-3">
+    <h5 class="fw-bold"><i class="fas fa-list me-2 text-success"></i>My Products</h5>
+  </div>
+  <div class="card-body">
+    {% if products %}
+    <div class="table-responsive">
+      <table class="table table-hover align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>Product</th>
+            <th>Category</th>
+            <th>Price</th>
+            <th>Stock</th>
+            <th>Rating</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in products %}
+          <tr>
+            <td>
+              <div class="d-flex align-items-center gap-2">
+                <img src="{{ p.image_url or 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=100' }}"
+                     class="rounded-3" width="45" height="45" style="object-fit:cover">
+                <strong>{{ p.name }}</strong>
+              </div>
+            </td>
+            <td><span class="badge bg-success-subtle text-success">{{ p.category }}</span></td>
+            <td class="fw-semibold text-success">₹{{ p.price }}/{{ p.unit }}</td>
+            <td>{{ p.quantity_available }}</td>
+            <td>
+              <i class="fas fa-star text-warning small"></i>
+              {{ p.avg_rating }} ({{ p.review_count }})
+            </td>
+            <td>
+              <a href="/toggle_product/{{ p.id }}"
+                 class="badge text-decoration-none {{ 'bg-success' if p.is_active else 'bg-secondary' }}"
+                 style="cursor:pointer; font-size:0.85em; padding:6px 10px;"
+                 title="Click to toggle Active/Inactive">
+                {% if p.is_active %}
+                  <i class="fas fa-check-circle me-1"></i> Active
+                {% else %}
+                  <i class="fas fa-times-circle me-1"></i> Inactive
+                {% endif %}
+              </a>
+            </td>
+            <td>
+              <div class="d-flex gap-1">
+                <a href="{{ url_for('edit_product', pid=p.id) }}" class="btn btn-outline-warning btn-sm rounded-pill">
+                  <i class="fas fa-edit"></i>
+                </a>
+                <a href="{{ url_for('delete_product', pid=p.id) }}" class="btn btn-outline-danger btn-sm rounded-pill"
+                   onclick="return confirm('Delete this product?')">
+                  <i class="fas fa-trash"></i>
+                </a>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="text-center py-5 text-muted">
+      <i class="fas fa-seedling fa-3x mb-3 text-success"></i>
+      <h5>No products yet.</h5>
+      <a href="{{ url_for('add_product') }}" class="btn btn-success rounded-pill mt-2">Add Your First Product</a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

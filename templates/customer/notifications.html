@@ -1,0 +1,385 @@
+{% extends "customer/base.html" %}
+{% block title %}My Notifications – FarmDirect{% endblock %}
+
+{% block extra_head %}
+<style>
+  /* ── Palette ─────────────────────────────────────── */
+  :root {
+    --green-deep:   #1a4a2e;
+    --green-mid:    #2d7a4f;
+    --green-light:  #e8f5ee;
+    --amber:        #e07b2a;
+    --amber-light:  #fff4eb;
+    --red-soft:     #e53935;
+    --ink:          #1c2b1e;
+    --muted:        #6b7f6e;
+    --divider:      #d4e8da;
+    --white:        #ffffff;
+    --bg:           #f5fbf7;
+  }
+
+  /* ── Page shell ──────────────────────────────────── */
+  .notif-page {
+    min-height: 100vh;
+    background: var(--bg);
+    padding: 48px 16px 80px;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+  }
+
+  .notif-container {
+    max-width: 680px;
+    margin: 0 auto;
+  }
+
+  /* ── Header ──────────────────────────────────────── */
+  .notif-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 32px;
+  }
+
+  .notif-header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .notif-icon-wrap {
+    width: 52px;
+    height: 52px;
+    background: var(--green-deep);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    flex-shrink: 0;
+  }
+
+  .notif-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--ink);
+    margin: 0;
+    line-height: 1.2;
+  }
+
+  .notif-subtitle {
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin: 2px 0 0;
+  }
+
+  .mark-all-btn {
+    background: none;
+    border: 1.5px solid var(--green-mid);
+    color: var(--green-mid);
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 7px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.18s;
+    white-space: nowrap;
+  }
+  .mark-all-btn:hover {
+    background: var(--green-mid);
+    color: var(--white);
+  }
+
+  /* ── Filter tabs ─────────────────────────────────── */
+  .notif-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+    border-bottom: 2px solid var(--divider);
+    padding-bottom: 0;
+  }
+
+  .notif-tab {
+    background: none;
+    border: none;
+    padding: 8px 18px 12px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--muted);
+    cursor: pointer;
+    border-bottom: 2.5px solid transparent;
+    margin-bottom: -2px;
+    transition: all 0.15s;
+  }
+  .notif-tab.active {
+    color: var(--green-deep);
+    border-bottom-color: var(--green-deep);
+  }
+  .notif-tab:hover:not(.active) {
+    color: var(--ink);
+  }
+
+  /* ── Notification card ───────────────────────────── */
+  .notif-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .notif-card {
+    background: var(--white);
+    border-radius: 14px;
+    border: 1.5px solid var(--divider);
+    padding: 16px 18px;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    transition: box-shadow 0.18s, border-color 0.18s;
+    position: relative;
+  }
+
+  .notif-card:hover {
+    box-shadow: 0 4px 18px rgba(26,74,46,0.08);
+    border-color: #b2d8bf;
+  }
+
+  .notif-card.unread {
+    border-left: 4px solid var(--green-mid);
+    background: var(--green-light);
+  }
+
+  .notif-card.type-confirmed .notif-emoji { background: #e6f4ea; }
+  .notif-card.type-delivered .notif-emoji { background: #e3f2fd; }
+  .notif-card.type-cancelled .notif-emoji { background: #fce4ec; }
+  .notif-card.type-placed    .notif-emoji { background: var(--amber-light); }
+
+  .notif-emoji {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+    background: var(--green-light);
+  }
+
+  .notif-body {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .notif-msg {
+    font-size: 0.93rem;
+    color: var(--ink);
+    line-height: 1.45;
+    margin: 0 0 5px;
+    font-weight: 500;
+  }
+
+  .notif-card.unread .notif-msg {
+    font-weight: 600;
+  }
+
+  .notif-time {
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+
+  .notif-unread-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--green-mid);
+    flex-shrink: 0;
+    margin-top: 6px;
+  }
+
+  .notif-card:not(.unread) .notif-unread-dot {
+    background: transparent;
+  }
+
+  .notif-link-btn {
+    display: inline-block;
+    margin-top: 8px;
+    font-size: 0.78rem;
+    color: var(--green-mid);
+    font-weight: 600;
+    text-decoration: none;
+    background: rgba(45,122,79,0.08);
+    padding: 4px 10px;
+    border-radius: 20px;
+    transition: background 0.15s;
+  }
+  .notif-link-btn:hover {
+    background: rgba(45,122,79,0.16);
+    text-decoration: none;
+  }
+
+  /* ── Empty state ─────────────────────────────────── */
+  .notif-empty {
+    text-align: center;
+    padding: 72px 24px;
+    background: var(--white);
+    border-radius: 18px;
+    border: 1.5px dashed var(--divider);
+  }
+
+  .notif-empty-icon {
+    font-size: 3.5rem;
+    margin-bottom: 12px;
+    display: block;
+  }
+
+  .notif-empty-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--ink);
+    margin: 0 0 6px;
+  }
+
+  .notif-empty-sub {
+    font-size: 0.87rem;
+    color: var(--muted);
+    margin: 0;
+  }
+
+  /* ── Responsive ──────────────────────────────────── */
+  @media (max-width: 480px) {
+    .notif-title  { font-size: 1.2rem; }
+    .mark-all-btn { display: none; }
+    .notif-tabs   { overflow-x: auto; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="notif-page">
+  <div class="notif-container">
+
+    <!-- Header -->
+    <div class="notif-header">
+      <div class="notif-header-left">
+        <div class="notif-icon-wrap">🔔</div>
+        <div>
+          <h1 class="notif-title">Notifications</h1>
+          <p class="notif-subtitle">
+            {% set unread = notifications | selectattr('is_read', 'equalto', false) | list %}
+            {% if unread %}
+              {{ unread | length }} unread update{{ 's' if unread | length != 1 }}
+            {% else %}
+              You're all caught up!
+            {% endif %}
+          </p>
+        </div>
+      </div>
+      {% if notifications %}
+        <form method="POST" action="/notifications/mark-all-read">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+          <button type="submit" class="mark-all-btn">Mark all read</button>
+        </form>
+      {% endif %}
+    </div>
+
+    <!-- Filter tabs -->
+    <div class="notif-tabs">
+      <button class="notif-tab active" onclick="filterNotifs('all', this)">All</button>
+      <button class="notif-tab" onclick="filterNotifs('unread', this)">Unread</button>
+      <button class="notif-tab" onclick="filterNotifs('orders', this)">Orders</button>
+    </div>
+
+    <!-- Notification list -->
+    {% if notifications %}
+      <div class="notif-list" id="notif-list">
+        {% for n in notifications %}
+          {% set msg_lower = n.message | lower %}
+
+          {# Determine card type for colour coding #}
+          {% if 'confirmed' in msg_lower or 'accepted' in msg_lower %}
+            {% set card_type = 'confirmed' %}
+            {% set emoji = '✅' %}
+          {% elif 'delivered' in msg_lower %}
+            {% set card_type = 'delivered' %}
+            {% set emoji = '📦' %}
+          {% elif 'cancelled' in msg_lower or 'canceled' in msg_lower %}
+            {% set card_type = 'cancelled' %}
+            {% set emoji = '❌' %}
+          {% else %}
+            {% set card_type = 'placed' %}
+            {% set emoji = '🛒' %}
+          {% endif %}
+
+          <div class="notif-card type-{{ card_type }} {{ 'unread' if not n.is_read else '' }}"
+               data-type="{{ card_type }}"
+               data-read="{{ 'true' if n.is_read else 'false' }}"
+               id="notif-{{ n.id }}">
+
+            <div class="notif-emoji">{{ emoji }}</div>
+
+            <div class="notif-body">
+              <p class="notif-msg">{{ n.message }}</p>
+              <span class="notif-time">
+                {{ n.created_at.strftime('%d %b %Y, %I:%M %p') }}
+              </span>
+              {% if n.link %}
+                <br>
+                <a class="notif-link-btn" href="{{ n.link }}">View details →</a>
+              {% endif %}
+            </div>
+
+            <div class="notif-unread-dot"></div>
+          </div>
+        {% endfor %}
+      </div>
+
+    {% else %}
+      <div class="notif-empty">
+        <span class="notif-empty-icon">🌿</span>
+        <p class="notif-empty-title">No notifications yet</p>
+        <p class="notif-empty-sub">Order updates and alerts will show up here.</p>
+      </div>
+    {% endif %}
+
+  </div><!-- /notif-container -->
+</div><!-- /notif-page -->
+
+<script>
+  /* Filter tabs */
+  function filterNotifs(type, btn) {
+    document.querySelectorAll('.notif-tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+
+    document.querySelectorAll('.notif-card').forEach(card => {
+      if (type === 'all') {
+        card.style.display = '';
+      } else if (type === 'unread') {
+        card.style.display = card.dataset.read === 'false' ? '' : 'none';
+      } else if (type === 'orders') {
+        const t = card.dataset.type;
+        card.style.display = ['placed','confirmed','delivered','cancelled'].includes(t) ? '' : 'none';
+      }
+    });
+  }
+
+  /* Auto-mark as read via API when the card enters view */
+  if ('IntersectionObserver' in window) {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const card = entry.target;
+          if (card.dataset.read === 'false') {
+            const id = card.id.replace('notif-', '');
+            fetch(`/notifications/mark-read/${id}`, { method: 'POST' })
+              .then(() => {
+                card.dataset.read = 'true';
+                card.querySelector('.notif-unread-dot').style.background = 'transparent';
+              });
+          }
+          observer.unobserve(card);
+        }
+      });
+    }, { threshold: 0.6 });
+
+    document.querySelectorAll('.notif-card').forEach(c => observer.observe(c));
+  }
+</script>
+{% endblock %}

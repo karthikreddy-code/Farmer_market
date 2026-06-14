@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% block title %}Cart — FarmDirect{% endblock %}
+{% block content %}
+<h2 class="fw-bold mb-4"><i class="fas fa-cart-shopping text-success me-2"></i>Your Cart</h2>
+ 
+{% if not items %}
+<div class="text-center py-5 text-muted">
+  <i class="fas fa-cart-arrow-down fa-4x mb-3"></i>
+  <h5>Your cart is empty.</h5>
+  <a href="{{ url_for('shop') }}" class="btn btn-success rounded-pill mt-2 px-4">Start Shopping</a>
+</div>
+{% else %}
+<form method="POST" action="{{ url_for('update_cart') }}">
+<div class="row g-4">
+  <div class="col-md-8">
+    <div class="card border-0 shadow-sm rounded-4">
+      <div class="card-body">
+        {% for item in items %}
+        <div class="d-flex align-items-center gap-3 py-3 {{ 'border-bottom' if not loop.last }}">
+          <img src="{{ item.product.image_url or 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=100' }}"
+               class="rounded-3" width="60" height="60" style="object-fit:cover">
+          <div class="flex-fill">
+            <h6 class="fw-semibold mb-0">{{ item.name }}</h6>
+            <small class="text-muted">by {{ item.farmer }}</small><br>
+            <strong class="text-success">₹{{ item.price }}/{{ item.unit }}</strong>
+          </div>
+          <div style="width:100px">
+            <input type="number" name="qty_{{ item.pid }}" class="form-control form-control-sm rounded-3 text-center"
+                   value="{{ item.quantity }}" min="0" step="0.5">
+          </div>
+          <div class="text-end" style="min-width:80px">
+            <strong>₹{{ "%.2f"|format(item.price * item.quantity) }}</strong>
+          </div>
+          <a href="{{ url_for('remove_from_cart', pid=item.pid) }}" class="btn btn-outline-danger btn-sm rounded-pill">
+            <i class="fas fa-trash"></i>
+          </a>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    <button type="submit" class="btn btn-outline-secondary rounded-pill mt-3">
+      <i class="fas fa-sync me-2"></i>Update Cart
+    </button>
+  </div>
+ 
+  <!-- ORDER SUMMARY -->
+  <div class="col-md-4">
+    <div class="card border-0 shadow-sm rounded-4 p-4">
+      <h5 class="fw-bold mb-3">Order Summary</h5>
+      <div class="d-flex justify-content-between mb-2">
+        <span>Subtotal</span>
+        <strong>₹{{ cart_total() }}</strong>
+      </div>
+      <div class="d-flex justify-content-between mb-2 text-muted small">
+        <span>Delivery</span>
+        <span>FREE</span>
+      </div>
+      <hr>
+      <div class="d-flex justify-content-between fw-bold fs-5">
+        <span>Total</span>
+        <span class="text-success">₹{{ cart_total() }}</span>
+      </div>
+      <a href="{{ url_for('checkout') }}" class="btn btn-success w-100 rounded-pill mt-3 fw-semibold">
+        <i class="fas fa-lock me-2"></i>Proceed to Checkout
+      </a>
+    </div>
+  </div>
+</div>
+</form>
+{% endif %}
+{% endblock %}

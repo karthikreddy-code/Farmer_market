@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}Active Products{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">
+        <i class="fas fa-check-circle text-success"></i>
+        Active Products
+    </h2>
+
+    {% if products %}
+    <div class="table-responsive">
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Category</th>
+                    <th>Price</th>
+                    <th>Stock</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in products %}
+                <tr>
+                    <td>{{ p.name }}</td>
+                    <td>{{ p.category }}</td>
+                    <td>₹{{ p.price }}</td>
+                    <td>{{ p.quantity_available }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="alert alert-warning">
+        No active products found.
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

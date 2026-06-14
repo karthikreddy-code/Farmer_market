@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+{% block title %}{{ product.name }} — FarmDirect{% endblock %}
+{% block content %}
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{{ url_for('shop') }}">Shop</a></li>
+    <li class="breadcrumb-item active">{{ product.name }}</li>
+  </ol>
+</nav>
+ 
+<div class="row g-4">
+  <!-- PRODUCT IMAGE -->
+  <div class="col-md-5">
+    <img src="{{ product.image_url or 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=600' }}"
+         class="img-fluid rounded-4 shadow" alt="{{ product.name }}">
+  </div>
+ 
+  <!-- PRODUCT INFO -->
+  <div class="col-md-7">
+    <span class="badge bg-success mb-2">{{ product.category }}</span>
+    <h2 class="fw-bold">{{ product.name }}</h2>
+    <div class="mb-3">
+      {% for i in range(1, 6) %}
+        <i class="fas fa-star fs-5 {{ 'text-warning' if i <= product.avg_rating else 'text-muted' }}"></i>
+      {% endfor %}
+      <span class="ms-2 fw-semibold">{{ product.avg_rating }}</span>
+      <span class="text-muted ms-1">({{ product.review_count }} reviews)</span>
+    </div>
+    <h3 class="text-success fw-bold">₹{{ product.price }} <span class="fs-6 text-muted fw-normal">per {{ product.unit }}</span></h3>
+ 
+    <hr>
+    <p class="text-muted">{{ product.description }}</p>
+ 
+    <div class="row g-3 mb-4">
+      <div class="col-6">
+        <div class="info-tile rounded-3 p-3 text-center bg-success-subtle">
+          <i class="fas fa-boxes text-success mb-1 d-block"></i>
+          <strong>{{ product.quantity_available }} {{ product.unit }}</strong>
+          <div class="text-muted small">Available</div>
+        </div>
+      </div>
+      <div class="col-6">
+        <div class="info-tile rounded-3 p-3 text-center bg-warning-subtle">
+          <i class="fas fa-user-circle text-warning mb-1 d-block"></i>
+          <strong>{{ product.farmer.name }}</strong>
+          <div class="text-muted small">{{ product.farmer.location or 'Local Farm' }}</div>
+        </div>
+      </div>
+    </div>
+ 
+    {% if session.get('user_role') == 'customer' %}
+    <form action="{{ url_for('add_to_cart', pid=product.id) }}" method="POST" class="d-flex gap-2">
+      <input type="number" name="quantity" class="form-control rounded-3" value="1" min="0.5" step="0.5"
+             max="{{ product.quantity_available }}" style="max-width:100px">
+      <button type="submit" class="btn btn-success px-4 rounded-pill fw-semibold">
+        <i class="fas fa-cart-plus me-2"></i>Add to Cart
+      </button>
+    </form>
+    {% elif not session.get('user_id') %}
+    <a href="{{ url_for('login') }}" class="btn btn-success px-4 rounded-pill">Login to Order</a>
+    {% endif %}
+  </div>
+</div>
+ 
+<!-- REVIEWS SECTION -->
+<hr class="my-5">
+<h4 class="fw-bold mb-4"><i class="fas fa-comments text-warning me-2"></i>Customer Reviews</h4>
+ 
+{% if session.get('user_role') == 'customer' and not user_reviewed %}
+<div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+  <h6 class="fw-semibold mb-3">Write a Review</h6>
+  <form action="{{ url_for('add_review', pid=product.id) }}" method="POST">
+    <div class="mb-3">
+      <label class="form-label">Your Rating</label>
+      <div class="star-input d-flex gap-2 fs-4">
+        {% for i in range(1, 6) %}
+        <label>
+          <input type="radio" name="rating" value="{{ i }}" class="d-none" required>
+          <i class="fas fa-star text-muted star-btn" data-val="{{ i }}"></i>
+        </label>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Your Comment</label>
+      <textarea name="comment" class="form-control rounded-3" rows="3" placeholder="Share your experience..."></textarea>
+    </div>
+    <button type="submit" class="btn btn-warning rounded-pill px-4 fw-semibold">Submit Review</button>
+  </form>
+</div>
+{% endif %}
+ 
+{% if reviews %}
+<div class="row g-3">
+  {% for review in reviews %}
+  <div class="col-md-6">
+    <div class="card border-0 shadow-sm rounded-4 p-3">
+      <div class="d-flex justify-content-between align-items-start">
+        <div>
+          <strong>{{ review.reviewer.name }}</strong>
+          <div>
+            {% for i in range(1, 6) %}
+              <i class="fas fa-star small {{ 'text-warning' if i <= review.rating else 'text-muted' }}"></i>
+            {% endfor %}
+          </div>
+        </div>
+        <small class="text-muted">{{ review.created_at.strftime('%d %b %Y') }}</small>
+      </div>
+      {% if review.comment %}
+      <p class="text-muted mt-2 mb-0 small">{{ review.comment }}</p>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<p class="text-muted"><i class="fas fa-comment-slash me-1"></i>No reviews yet. Be the first to review!</p>
+{% endif %}
+ 
+<script>
+document.querySelectorAll('.star-btn').forEach(star => {
+  star.addEventListener('click', function() {
+    const val = parseInt(this.dataset.val);
+    document.querySelectorAll('.star-btn').forEach((s, i) => {
+      s.classList.toggle('text-warning', i < val);
+      s.classList.toggle('text-muted', i >= val);
+    });
+  });
+  star.addEventListener('mouseover', function() {
+    const val = parseInt(this.dataset.val);
+    document.querySelectorAll('.star-btn').forEach((s, i) => {
+      s.classList.toggle('text-warning', i < val);
+      s.classList.toggle('text-muted', i >= val);
+    });
+  });
+});
+</script>
+{% endblock %}
