@@ -18,11 +18,11 @@ except ImportError:
     TWILIO_AVAILABLE = False
 
 app = Flask(__name__)
-app.secret_key = 'farmdirect-super-secret-key-2024'
+app.secret_key = os.environ.get('SECRET_KEY', 'farmdirect-super-secret-key-2024')
 app.config['SECRET_KEY'] = app.secret_key
 app.config['SESSION_COOKIE_NAME'] = 'farmdirect_session'
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
-app.config['SESSION_COOKIE_SECURE'] = False
+app.config['SESSION_COOKIE_SECURE'] = os.environ.get('FLASK_ENV') == 'production'
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['PERMANENT_SESSION_LIFETIME'] = 86400  # 24 hours
 
@@ -44,16 +44,51 @@ TWILIO_ACCOUNT_SID  = os.environ.get('TWILIO_ACCOUNT_SID', '')
 TWILIO_AUTH_TOKEN   = os.environ.get('TWILIO_AUTH_TOKEN', '')
 TWILIO_PHONE_NUMBER = os.environ.get('TWILIO_PHONE_NUMBER', '')  # e.g. +1234567890
 
-database_url = os.environ.get('DATABASE_URL') or os.environ.get('SQLALCHEMY_DATABASE_URI')
-if not database_url:
-    db_user = urllib.parse.quote_plus(os.environ.get('DB_USER', 'root'))
-    db_password = urllib.parse.quote_plus(os.environ.get('DB_PASSWORD', 'Karthik@2004'))
-    db_host = os.environ.get('DB_HOST', 'localhost')
-    db_name = os.environ.get('DB_NAME', 'farmdirect')
-    database_url = f'mysql+pymysql://{db_user}:{db_password}@{db_host}/{db_name}'
+def build_database_url():
+    database_url = (
+        os.environ.get('DATABASE_URL')
+        or os.environ.get('SQLALCHEMY_DATABASE_URI')
+        or os.environ.get('MYSQL_URL')
+        or os.environ.get('MYSQL_PUBLIC_URL')
+    )
+
+    if database_url:
+        if database_url.startswith('mysql://'):
+            return database_url.replace('mysql://', 'mysql+pymysql://', 1)
+        return database_url
+
+    mysql_vars = {
+        'MYSQLUSER': os.environ.get('MYSQLUSER'),
+        'MYSQLPASSWORD': os.environ.get('MYSQLPASSWORD'),
+        'MYSQLHOST': os.environ.get('MYSQLHOST'),
+        'MYSQLPORT': os.environ.get('MYSQLPORT', '3306'),
+        'MYSQLDATABASE': os.environ.get('MYSQLDATABASE'),
+    }
+    if all(mysql_vars.values()):
+        db_password = urllib.parse.quote_plus(mysql_vars['MYSQLPASSWORD'])
+        return (
+            f"mysql+pymysql://{mysql_vars['MYSQLUSER']}:{db_password}"
+            f"@{mysql_vars['MYSQLHOST']}:{mysql_vars['MYSQLPORT']}/{mysql_vars['MYSQLDATABASE']}"
+        )
+
+    if os.environ.get('RAILWAY_ENVIRONMENT') or os.environ.get('RAILWAY_ENVIRONMENT_NAME'):
+        missing = ', '.join(name for name, value in mysql_vars.items() if not value)
+        raise RuntimeError(
+            "No database connection string found. Add a Railway variable reference "
+            "for MYSQL_URL or provide the MySQL variables. Missing: " + missing
+        )
+
+    return 'sqlite:///farmers.db'
+
+
+database_url = build_database_url()
 
 # Resolve SQLite relative paths against the application directory.
-if database_url.startswith('sqlite:///') and not database_url.startswith('sqlite:////'):
+if (
+    database_url.startswith('sqlite:///')
+    and not database_url.startswith('sqlite:////')
+    and database_url != 'sqlite:///:memory:'
+):
     sqlite_path = database_url[len('sqlite:///'):]
     if not os.path.isabs(sqlite_path):
         base_dir = os.path.abspath(os.path.dirname(__file__))
@@ -929,4 +964,5 @@ print(app.url_map)
 print("=============================\n")
 
 if __name__ == '__main__':
-    app.run(debug=True, use_reloader=False)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=True, use_reloader=False)
